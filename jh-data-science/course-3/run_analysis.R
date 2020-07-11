@@ -144,19 +144,22 @@ run_analysis <- function()
     
     t_means<-transpose(means)
     colnames(t_means)<-rownames(means)
+    rownames(t_means)<-c("mean")
     
     t_stdvs<-transpose(stdvs)
     colnames(t_stdvs)<-rownames(stdvs)
-
-   # Print the mean and standard output values into separate files 
-    write.table(t_means, "output-mean.csv", sep=",", row.names=FALSE, col.names=TRUE)
-    write.table(t_stdvs, "output-stdev.csv", sep=",", row.names=FALSE, col.names=TRUE)
+    rownames(t_stdvs)<-c("stdev")
     
+    combi_ds <- rbind(t_means, t_stdvs)
+    
+    # Print the mean and standard output values into separate files 
+    write.csv(combi_ds, "mean-and-stdev.csv", row.names=TRUE)
+
     # Group the means by test subject id and activity. 
     # Write it to a separate file. 
     output <- aggregate(as.matrix(merged_set[,1:561]), as.list(merged_set[,562:564]), mean)
 
-    write.csv(output, "output-grouped-means.csv", row.names=FALSE)
+    write.csv(output, "grouped-means.csv", row.names=FALSE)
     
 } 
 
