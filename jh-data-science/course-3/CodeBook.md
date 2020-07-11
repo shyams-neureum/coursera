@@ -215,29 +215,29 @@ tBodyGyroJerk-min()-Y		    |
 tBodyGyroJerk-min()-Z		    |	
 tBodyGyroJerk-sma()		        |	
 tBodyGyroJerk-energy()-X		|	
-tBodyGyroJerk-energy()-Y	
-tBodyGyroJerk-energy()-Z	
-tBodyGyroJerk-iqr()-X	
-tBodyGyroJerk-iqr()-Y	
-tBodyGyroJerk-iqr()-Z	
-tBodyGyroJerk-entropy()-X	
-tBodyGyroJerk-entropy()-Y	
-tBodyGyroJerk-entropy()-Z	
-tBodyGyroJerk-arCoeff()-X,1	
-tBodyGyroJerk-arCoeff()-X,2	
-tBodyGyroJerk-arCoeff()-X,3	
-tBodyGyroJerk-arCoeff()-X,4	
-tBodyGyroJerk-arCoeff()-Y,1	
-tBodyGyroJerk-arCoeff()-Y,2	
-tBodyGyroJerk-arCoeff()-Y,3	
-tBodyGyroJerk-arCoeff()-Y,4	
-tBodyGyroJerk-arCoeff()-Z,1	
-tBodyGyroJerk-arCoeff()-Z,2	
-tBodyGyroJerk-arCoeff()-Z,3	
-tBodyGyroJerk-arCoeff()-Z,4	
-tBodyGyroJerk-correlation()-X,Y	
-tBodyGyroJerk-correlation()-X,Z	
-tBodyGyroJerk-correlation()-Y,Z	
+tBodyGyroJerk-energy()-Y		|	
+tBodyGyroJerk-energy()-Z		|	
+tBodyGyroJerk-iqr()-X		    |	
+tBodyGyroJerk-iqr()-Y		    |	
+tBodyGyroJerk-iqr()-Z		    |	
+tBodyGyroJerk-entropy()-X		|	
+tBodyGyroJerk-entropy()-Y		|	
+tBodyGyroJerk-entropy()-Z		|	
+tBodyGyroJerk-arCoeff()-X,1		|	
+tBodyGyroJerk-arCoeff()-X,2		|	
+tBodyGyroJerk-arCoeff()-X,3		|	
+tBodyGyroJerk-arCoeff()-X,4		|	
+tBodyGyroJerk-arCoeff()-Y,1		|	
+tBodyGyroJerk-arCoeff()-Y,2		|	
+tBodyGyroJerk-arCoeff()-Y,3		|	
+tBodyGyroJerk-arCoeff()-Y,4		|
+tBodyGyroJerk-arCoeff()-Z,1		|	
+tBodyGyroJerk-arCoeff()-Z,2		|	
+tBodyGyroJerk-arCoeff()-Z,3		|	
+tBodyGyroJerk-arCoeff()-Z,4		|	
+tBodyGyroJerk-correlation()-X,Y	|	
+tBodyGyroJerk-correlation()-X,Z |	
+tBodyGyroJerk-correlation()-Y,Z-| 	
 tBodyAccMag-mean()	
 tBodyAccMag-std()	
 tBodyAccMag-mad()	
