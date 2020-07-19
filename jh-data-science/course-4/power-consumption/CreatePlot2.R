@@ -1,8 +1,8 @@
 ##
 ## Function: CreatePlot2
 ##
-## Description: This function will plot the averages of Global Active Power 
-## consumed by the household on Thursdays and Fridays during the period. 
+## Description: This function will plot "Plot 2" a time-series of Global Active
+## Power for the filtered dates of 2007-02-01 and 2007-02-02.
 ##
 ## Returns: None
 ##
