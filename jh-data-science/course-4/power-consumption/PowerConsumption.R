@@ -33,5 +33,11 @@ PowerConsumption <- function()
     # Create Plot #2.
     ret_val <- CreatePlot2(filt_data)
     
+    # Create Plot #3.
+    ret_val <- CreatePlot3(filt_data)
+    
+    # Create Plot #4
+    ret_val <- CreatePlot4(filt_data)
+    
     # Nothing to return
 }
