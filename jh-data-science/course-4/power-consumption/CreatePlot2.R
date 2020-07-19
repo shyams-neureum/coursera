@@ -6,7 +6,7 @@
 ##
 ## Returns: None
 ##
-## Parameters: Date, Time, Global_active_power
+## Parameters: Filtered Data Frame
 ##
 CreatePlot2 <- function(data_set)
 {
