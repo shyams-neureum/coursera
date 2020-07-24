@@ -71,6 +71,9 @@ Plot5 <- function()
                     summarize(sum(Emissions,na.rm=TRUE))
     colnames(balt_co_sums) <- c("Year","Sum")
     
+    # Common Scale for all Sums plots
+    sums_scale_max <- max(balt_co_sums$Sum)
+    
     balt_mv_means <- balt_mv_data %>% 
                      group_by(year) %>% 
                      summarize(mean(Emissions,na.rm=TRUE))
@@ -86,15 +89,19 @@ Plot5 <- function()
                      summarize(mean(Emissions,na.rm=TRUE))
     colnames(balt_co_means) <- c("Year","Mean")
 
+    # Common Scale for all Means plots
+    means_scale_max <- max(balt_mv_means$Mean)
+
+    
     # Create Bar Plots of the Motor Vehicle, Motor Cycle and Cumulative Sums
     p1 <- ggplot(
             data=balt_mv_sums, 
             aes(x=Year, y=Sum, fill=Year))+
                 geom_bar(stat="identity", color="black", position=position_dodge())+
-                scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9", "#882534"))+
+                scale_fill_manual(values=c("#E69F00", "#56B4E9"))+
                 ylab("Sums")+
                 ggtitle("Sums of Motor-Vehicle-related Emissions")+
-                scale_y_continuous(labels = comma)+
+                scale_y_continuous(labels = comma, limits=c(0, sums_scale_max))+
                 theme_minimal()
     
     p2 <- ggplot(
@@ -104,6 +111,7 @@ Plot5 <- function()
                 scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9", "#882534"))+
                 ylab("Sums")+
                 ggtitle("Sums of Motorcycle-related Emissions")+
+                scale_y_continuous(limits=c(0, sums_scale_max))+
                 theme_minimal()
                 
     p3 <- ggplot(
@@ -113,36 +121,39 @@ Plot5 <- function()
             scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9", "#882534"))+
             ylab("Sums")+
             ggtitle("Sums of Combined Emissions")+
+            scale_y_continuous(limits=c(0, sums_scale_max))+        
             theme_minimal()
                 
     # Create Bar Plots of the Motor Vehicle, Motor Cycle and Cumulative Means
     p4 <- ggplot(
-        data=balt_mv_means, 
-        aes(x=Year, y=Mean, fill=Year))+
-        geom_bar(stat="identity", color="black", position=position_dodge())+
-        scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9", "#882534"))+
-        ylab("Means")+
-        ggtitle("Means of Motor-Vehicle-related Emissions")+
-        scale_y_continuous(labels = comma)+
-        theme_minimal()
+            data=balt_mv_means, 
+            aes(x=Year, y=Mean, fill=Year))+
+            geom_bar(stat="identity", color="black", position=position_dodge())+
+            scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9", "#882534"))+
+            ylab("Means")+
+            ggtitle("Means of Motor-Vehicle-related Emissions")+
+            scale_y_continuous(labels = comma, limits=c(0, means_scale_max))+
+            theme_minimal()
     
     p5 <- ggplot(
-        data=balt_mc_means, 
-        aes(x=Year, y=Mean, fill=Year))+
-        geom_bar(stat="identity", color="black", position=position_dodge())+
-        scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9", "#882534"))+
-        ylab("Means")+
-        ggtitle("Means of Motorcycle-related Emissions")+
-        theme_minimal()
+            data=balt_mc_means, 
+            aes(x=Year, y=Mean, fill=Year))+
+            geom_bar(stat="identity", color="black", position=position_dodge())+
+            scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9", "#882534"))+
+            ylab("Means")+
+            ggtitle("Means of Motorcycle-related Emissions")+
+            scale_y_continuous(limits=c(0, means_scale_max))+
+            theme_minimal()
     
     p6 <- ggplot(
-        data=balt_co_means, 
-        aes(x=Year, y=Mean, fill=Year))+
-        geom_bar(stat="identity", color="black", position=position_dodge())+
-        scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9", "#882534"))+
-        ylab("Means")+
-        ggtitle("Means of Combined Emissions")+
-        theme_minimal()
+            data=balt_co_means, 
+            aes(x=Year, y=Mean, fill=Year))+
+            geom_bar(stat="identity", color="black", position=position_dodge())+
+            scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9", "#882534"))+
+            ylab("Means")+
+            ggtitle("Means of Combined Emissions")+
+            scale_y_continuous(limits=c(0, means_scale_max))+
+            theme_minimal()
     
     figure <- ggarrange(p1, p2, p3, p4, p5, p6, ncol=3, nrow=2, legend="bottom")
     ggsave("Plot5.png", plot=figure, width=12, height=8, units="in")
