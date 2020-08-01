@@ -1,0 +1,211 @@
+---
+title: "The Massive Cost of Tornadoes in the USA"
+author: "Shyam Sundar"
+date: "7/30/2020"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(R.utils)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(grid)
+
+```
+## Synopsis
+
+We analyzed the National Weather Service's Storm Data for the periods between 1950 and November 2011 for the most impactful weather events in the United States. This report outlines our analysis and conclusions to highlight the enormous cost that Tornadoes and related events impose on the United States, both in terms of economic costs and lives affected. 
+
+## Data Processing
+
+### Downloading the Data & Documentation
+
+The National Weather Service Storm Data and documentation spans the period from 1950 to November 2011. In the earlier years of the database, there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete. 
+
+[StormData.csv.bz2](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) is the data in the form of a comma-separated-value file compressed via the bzip2 algorithm to reduce its size. National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf) and National Weather Service [Events FAQ](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf) have some documentation on the variables in the data file.
+
+The section of code below is used to download the data set & documentation and unzip the data for reading. 
+
+```{r, echo=TRUE, cache=TRUE}
+if(!file.exists("Storm-Data")){
+    dir.create("Storm-Data")
+}
+
+if(!file.exists("Storm-Data/StormData.csv.bz2")){
+    download.file(
+        "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2",
+        "Storm-Data/StormData.csv.bz2",
+        "libcurl")
+
+    download.file(
+        "https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf",
+        "Storm-Data/NWS-Storm-Data.pdf",
+        "libcurl")
+
+    download.file(
+        "https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf",
+        "Storm-Data/Events-FAQ-Page.pdf",
+        "libcurl")
+}
+
+if(!exists("Storm-Data/Storm-Data.csv")){
+    bunzip2("Storm-Data/StormData.csv.bz2", "Storm-Data/Storm-Data.csv", remove=TRUE, skip=TRUE)
+}
+```
+
+### Opening the Data File & Examining the Data
+
+The data file for this analysis spans a period of over 60 years, and hence is very large. This operation might take much time. It has been cached for optimization of the second and subsequent runs. 
+
+```{r, echo=TRUE, cache=TRUE}
+my_data <- read.csv("Storm-Data/Storm-Data.csv")
+
+# Display the dimensions of the data
+dim(my_data)
+```
+
+Display the list of variables (columns) in the data set with their respective types. 
+
+```{r, echo=TRUE}
+str(my_data)
+```
+
+EVTYPE (Event Type) is the key variable of interest that drives this analysis. The human cost of the events is represented by the FATALITIES and INJURIES variables. We use the variables as is. These are raw numbers specify the number of fatalities and injuries caused by the event.
+
+For convenience, we created a derived variable called "Harm", which is the sum of the fatalities and injuries. 
+
+```{r, echo=TRUE, cache=TRUE}
+my_data$Harm <- my_data$FATALITIES + my_data$INJURIES
+```
+
+We created a condensed dataset that sums the fatalities and injuries, and groups them by the Event Type. We ignore the date/time of the event for this grouping. 
+
+```{r, echo=TRUE, cache=TRUE}
+by_evtype <- my_data %>% group_by(EVTYPE) %>% select(EVTYPE, FATALITIES, INJURIES, Harm) %>% summarize_if(is.numeric, sum)
+
+dim(by_evtype)
+```
+
+### Plot Set 1 - Human Cost - Fatalities & Injuries
+
+The condensed dataset above is still too large for a plot because there are ```r nrow(by_evtype)``` event types in this dataset. We can zoom further in on the Top 10 event types by the harm (fatalities+injuries) they cause. This compacts the dataset for plotting purposes.
+
+```{r, echo=TRUE}
+top10_evtype <- by_evtype %>% top_n(10, Harm) %>% arrange(desc(Harm), desc(FATALITIES), desc(INJURIES))
+```
+
+We can create three (3) bar plots to show the Top 10 event types by human cost - Fatalities+Injuries, Fatalities only, Injuries only. We only demonstrate the Fatalities+Injuries plot in this report to keep this under the 3-images limit. However, we used all 3 plots for our analysis. They support the conclusions.  
+
+```{r, echo=TRUE}
+    p1 <- ggplot(data=top10_evtype, aes(x=Harm, y=EVTYPE))+
+            geom_bar(stat="identity", color="#000000", fill="#E69F00")+
+            geom_text(aes(label=Harm), hjust=-0.1)+
+            xlab("Fatalities + Injuries")+
+            ylab("Event Type")+
+            ggtitle("Top 10 Event Types (Fatalities+Injuries)")+
+            xlim(0, 110000)+
+            theme_minimal()
+
+    # Displaying the Plot now
+    p1
+```
+
+### Plot Set 2 - Economic Cost - Property & Crop Damage
+
+The economic cost of these events is represented by the PROPDMG (Property Damages) and CROPDMG (Crop Damages) variables. However, we cannot use the variables as is. There are additional scale variables, PROPDMG_EXP and CROPDMG_EXP, that indicate a multiplier for the PROPDMG and CROPDMG variables. 
+
+We created a conversion table called 'damage_multiple' that represents the multiplier value. We then used the conversion table to create two variables, PROPDMG_num (the multiplied value for Property Damage) and CROPDMG_num (the multiplied value for Crop Damage), that represented the final numeric value for the damages. We also created an additional convenience variable called TOTALDMG_num, which is the sum of the Property and Crop damages. 
+
+The conversion table and convenience variable creation code is shown below.
+
+```{r, echo=TRUE}
+
+# Conversion Table Creation
+exp_code <- c("k", "K", "m", "M", "b", "B", "h", "H", "+", "-", "?", "", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+
+# There are number of codes for which we could not find the meaning. For 
+# immediate purposes, we use 1 as the multiplier for these codes. Most 
+# of the events that correspond to these codes have zero (0) property 
+# and/or crop damage values. So, this assumption does not affect our
+# analysis and conclusions significantly. 
+damage_multiple <- c(10^3, 10^3, 10^6, 10^6, 10^9, 10^9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+
+names(damage_multiple) <- exp_code
+
+# Create the derived and convenience variables
+my_data$PROPDMG_num <- my_data$PROPDMG * damage_multiple[my_data$PROPDMGEXP]
+my_data$CROPDMG_num <- my_data$CROPDMG * damage_multiple[my_data$CROPDMGEXP]
+my_data$TOTALDMG_num <- my_data$CROPDMG_num + my_data$PROPDMG_num
+```
+We created a condensed dataset that sums the damage variables and groups them by the Event Type. We ignore the date/time of the event for this group. 
+
+```{r, echo=TRUE}
+cost_by_evtype <- my_data %>% group_by(EVTYPE) %>% select(EVTYPE, TOTALDMG_num, PROPDMG_num, CROPDMG_num) %>% summarize_if(is.numeric, sum)
+
+dim(cost_by_evtype)
+```
+
+This condensed dataset above is still too large for a plot, similar to the human cost plot. Since this is grouped by Event Type, it still has ```r nrow(cost_by_evtype)``` event types. We can zoom further in on the Top 10 event types by the Total Damage (Property + Crop) they cause. This compacts the dataset for plotting purposes. 
+
+```{r, echo=TRUE}
+top10_cost_by_evtype <- cost_by_evtype %>% top_n(10, TOTALDMG_num) %>% arrange(desc(TOTALDMG_num), desc(PROPDMG_num), desc(CROPDMG_num))
+```
+
+We can create three (3) bar plots to show the Top 10 event types by economic cost - Total Damage, Property Damage and Crop Damage respectively. We only demonstrate one bar plot in this report to meet the restriction on the number of images. However, all 3 plots were used in the analysis, and all of them support the conclusions.  
+
+```{r, echo=TRUE}
+
+    p2 <- ggplot(data=top10_cost_by_evtype, aes(x=(TOTALDMG_num/10^6), y=EVTYPE))+
+            geom_bar(stat="identity", color="#000000", fill="#3FA6CC")+
+            geom_text(aes(label=(TOTALDMG_num/10^6)), hjust=-0.1)+
+            xlab("Total Damage ($, millions)")+
+            ylab("Event Type")+
+            ggtitle("Top 10 Event Types (Total Damage)")+
+            xlim(0,1800)+
+            theme_minimal()
+
+    # Displaying the plots now
+    p2    
+```
+
+### Plot Set 3 - Post-1982 Economic Cost - Property & Crop Damage
+
+We noticed in our analysis of the data that the NWS Storm Data until 1982 only records tornadoes. Hardly any other storm or event type is seen till 1982. This may probably be skewing our analysis. Hence, we will discard all data until the year 1982 and try the analysis again. 
+
+```{r, echo=TRUE}
+# Create a variable for Year
+my_data$Year <- as.numeric(format(as.Date(my_data$BGN_DATE, format="%m/%d/%Y %T"), "%Y"))
+
+post_1982_data <- my_data[my_data$Year>=1983,]
+
+post_1982_harm <- post_1982_data %>% group_by(EVTYPE) %>% select(EVTYPE, Harm) %>% summarize_if(is.numeric, sum)
+
+top10_post_1982 <- post_1982_harm %>% top_n(10, Harm) %>% arrange(desc(Harm))
+
+# Create the Plot
+p3 <- ggplot(data=top10_post_1982, aes(x=Harm, y=EVTYPE))+
+        geom_bar(stat="identity", color="#000000", fill="#CC653F")+
+        geom_text(aes(label=Harm), hjust=-0.1)+
+        xlab("Fatalities+Injuries")+
+        ylab("Event Type")+
+        ggtitle("Post-1982 Top 10 (Fatalities+Injuries)")+
+        xlim(0, 45000)+
+        theme_minimal()
+
+# Displaying the Plot now
+p3
+
+```
+
+The plot above indicates that a vast majority of the tornado-related fatalities and injuries did occur between 1950 and 1982, the period during which the data set predominantly reported only tornadoes. However, the high domination of tornadoes in the fatality and injury count is seen even during the post-1982 period. 
+
+## Results
+
+Storm events in the United States from 1950 to November 2011 led to over ```r format(sum(my_data$FATALITIES), big.mark=",", small.mark=",")``` lost lives and ```r format(sum(my_data$INJURIES), big.mark=",", small.mark=",")``` injuries. They also caused ```r format(sum(my_data$PROPDMG_num/10^9, na.rm=TRUE), decimal.mark=".", big.mark=",", small.mark=",")``` billion in property damage and ```r format(sum(my_data$CROPDMG_num/10^9, na.rm=TRUE), decimal.mark=".", big.mark=",", small.mark=",")``` billion in crop damage. These numbers constitute a massive human and economic cost on the country. 
+
+Not all of these ```r nrow(by_evtype)``` types of events cause similar losses. Our analysis indicates that tornadoes stand out as the leading cause, with a startlingly massive lead, of human and economic costs in the United States. No other event even comes close to the costs imposed on this country by tornadoes. This, in our assessment, establishes a more pressing need to mitigate the damages caused by tornadoes.
