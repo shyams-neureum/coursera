@@ -128,12 +128,7 @@ The conversion table and convenience variable creation code is shown below.
 # Conversion Table Creation
 exp_code <- c("k", "K", "m", "M", "b", "B", "h", "H", "+", "-", "?", "", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
 
-# There are number of codes for which we could not find the meaning. For 
-# immediate purposes, we use 1 as the multiplier for these codes. Most 
-# of the events that correspond to these codes have zero (0) property 
-# and/or crop damage values. So, this assumption does not affect our
-# analysis and conclusions significantly. 
-damage_multiple <- c(10^3, 10^3, 10^6, 10^6, 10^9, 10^9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+damage_multiple <- c(10^3, 10^3, 10^6, 10^6, 10^9, 10^9, 10^2, 10^2, 1, 1, 1, 1, 10^0, 10^1, 10^2, 10^3, 10^4, 10^5, 10^6, 10^7, 10^8, 10^9)
 
 names(damage_multiple) <- exp_code
 
